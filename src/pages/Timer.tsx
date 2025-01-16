@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, Clock, Send } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { timerService } from '../services/api';
 
 const Timer: React.FC = () => {
@@ -9,6 +9,7 @@ const Timer: React.FC = () => {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [currentTimerId, setCurrentTimerId] = useState<number | null>(null);
   const [description, setDescription] = useState('');
+  const TIME_ZONE = 'America/Los_Angeles'; // PST/PDT
 
   useEffect(() => {
     // Cargar timer activo al montar
@@ -18,11 +19,13 @@ const Timer: React.FC = () => {
           const { id, descripcion, fechaInicio } = response.data;
           setCurrentTimerId(id);
           setDescription(descripcion);
-          setStartTime(new Date(fechaInicio));
-          setIsRunning(true);
           
-          // Calcular tiempo transcurrido
-          const elapsed = Math.floor((Date.now() - new Date(fechaInicio).getTime()) / 1000);
+          // Convertir la fecha a PST
+          const startTimeInPST = new Date(fechaInicio);
+          setStartTime(startTimeInPST);
+          
+          // Calcular tiempo transcurrido usando PST
+          const elapsed = Math.floor((Date.now() - startTimeInPST.getTime()) / 1000);
           setTime(elapsed);
         }
       })
@@ -133,7 +136,7 @@ const Timer: React.FC = () => {
         {startTime && (
           <div className="mt-8 text-center text-gray-600">
             <Clock className="w-4 h-4 inline-block mr-2" />
-            Inicio: {format(startTime, 'HH:mm:ss')}
+            Inicio: {formatInTimeZone(startTime, TIME_ZONE, 'HH:mm:ss')}
           </div>
         )}
       </div>
